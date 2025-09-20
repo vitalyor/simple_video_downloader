@@ -1,0 +1,631 @@
+<head>
+    <meta charset="utf-8">
+    <title>Simple Video Downloader</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+        :root {
+            --bg: #0b1220;
+            /* page bg */
+            --panel: #121a2b;
+            /* cards */
+            --panel-2: #0f1727;
+            /* inputs */
+            --text: #e6edf7;
+            /* main text */
+            --muted: #8aa0c5;
+            /* muted */
+            --primary: #4f87ff;
+            /* buttons */
+            --primary-2: #7aa1ff;
+            /* hover */
+            --accent: #22d3ee;
+            /* accents */
+            --border: #203052;
+            /* borders */
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.5;
+            color: var(--text);
+            background: radial-gradient(1200px 600px at 20% -10%, #182341 0%, #0b1220 60%);
+            padding: 32px
+        }
+
+        h2 {
+            margin: 0 0 16px;
+            font-size: 24px;
+            font-weight: 700
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto
+        }
+
+        .panel {
+            background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35)
+        }
+
+        .pad {
+            padding: 16px
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .section {
+            margin-top: 16px
+        }
+
+        .fmtlist {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        input[type=url] {
+            flex: 1;
+            min-width: 300px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text)
+        }
+
+        input[type=url]::placeholder {
+            color: #90a3c7
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #3b6cff, #2f5cff);
+            color: white;
+            cursor: pointer;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            font-weight: 600
+        }
+
+        .btn:hover {
+            background: linear-gradient(180deg, #5681ff, #3f6cff)
+        }
+
+        .btn:disabled {
+            opacity: .6;
+            cursor: not-allowed
+        }
+
+        .radio {
+            appearance: none;
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--primary-2);
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            flex: none
+        }
+
+        .radio:checked {
+            border-color: var(--accent)
+        }
+
+        .radio:checked::after {
+            content: "";
+            position: absolute;
+            inset: 3px;
+            background: var(--accent);
+            border-radius: 50%
+        }
+
+        .meta {
+            display: flex;
+            gap: 14px
+        }
+
+        .meta img {
+            width: 120px;
+            height: 68px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border)
+        }
+
+        .title {
+            font-weight: 700
+        }
+
+        .progress {
+            height: 10px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            overflow: hidden
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+            transition: width .2s linear
+        }
+
+        .bar.indet {
+            width: 40%;
+            animation: indet 1.1s infinite
+        }
+
+        @keyframes indet {
+            0% {
+                margin-left: -40%
+            }
+
+            100% {
+                margin-left: 100%
+            }
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .ok {
+            color: var(--success)
+        }
+
+        .err {
+            color: var(--danger)
+        }
+
+        table.grid {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px
+        }
+
+        table.grid th,
+        table.grid td {
+            padding: 10px 12px;
+            text-align: left
+        }
+
+        table.grid thead th {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        table.grid tbody tr {
+            background: rgba(255, 255, 255, .02);
+            border: 1px solid var(--border)
+        }
+
+        table.grid tbody tr td:first-child {
+            border-radius: 10px 0 0 10px
+        }
+
+        table.grid tbody tr td:last-child {
+            border-radius: 0 10px 10px 0
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            color: var(--text);
+            background: rgba(255, 255, 255, .04)
+        }
+
+        .badge.av {
+            border-color: #2ad1ff;
+            color: #2ad1ff
+        }
+
+        .badge.video {
+            border-color: #7aa1ff;
+            color: #7aa1ff
+        }
+
+        .badge.audio {
+            border-color: #a1a1a1;
+            color: #a1a1a1
+        }
+
+        /* collapsible table area */
+        #tableArea{transition:max-height .4s ease, opacity .35s ease; max-height:1500px}
+        #tableArea.collapsed{max-height:0; opacity:0; overflow:hidden; pointer-events:none}
+
+        /* utility: hide elements */
+        .hidden{ display:none !important }
+
+        /* centered circular progress */
+        .center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;padding:24px 0}
+        .spinner{position:relative;width:180px;height:180px}
+        .spinner svg{display:block;transform:rotate(-90deg)}
+        .cpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;color:var(--text)}
+        .cmeta{margin-top:12px;font-size:14px;color:var(--muted)}
+        /* indeterminate sweep */
+        .spin .cpct{font-size:18px;opacity:.9}
+        .spin #cprog{animation:spin-sweep 1.1s linear infinite;stroke-dasharray:120 480}
+        @keyframes spin-sweep{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-600}}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Скачать видео</h2>
+
+        <div class="panel pad">
+            <form id="probeForm" class="row" style="margin-bottom:12px">
+                <input type="url" id="url" placeholder="Вставьте ссылку на видео" required>
+                <button type="submit" id="probeBtn" class="btn" title="Показать форматы">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white"
+                            stroke-width="2" />
+                    </svg>
+                    Показать форматы
+                </button>
+            </form>
+
+            <div id="meta" class="meta hidden" style="margin-bottom:12px"></div>
+
+            <div id="probeProgress" class="section hidden">
+              <div class="progress"><div class="bar indet"></div></div>
+              <div class="hint" style="margin-top:6px">Загружаю форматы…</div>
+            </div>
+
+            <div id="choice" class="hidden">
+                <div class="hint" style="margin-bottom:8px;">Список — «как есть» от yt-dlp. Для VIDEO-only звук
+                    добавится автоматически.</div>
+                <div id="tableArea">
+                  <table class="grid" id="fmtTable">
+                    <thead>
+                      <tr>
+                        <th style="width:36px;"></th>
+                        <th>Тип</th>
+                        <th>Разрешение</th>
+                        <th>FPS</th>
+                        <th>Контейнер</th>
+                        <th>Размер</th>
+                        <th>Битрейт</th>
+                        <th>Кодеки</th>
+                      </tr>
+                    </thead>
+                    <tbody id="formats"></tbody>
+                  </table>
+                  <div class="section footer">
+                    <button type="button" id="downloadBtn" class="btn" disabled>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                      Скачать выбранное
+                    </button>
+                    <span id="msg" class="hint"></span>
+                  </div>
+                </div>
+                <div id="centerProgress" class="center hidden">
+                  <div class="spinner">
+                    <svg width="180" height="180" viewBox="0 0 180 180">
+                      <defs>
+                        <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stop-color="#22d3ee"/>
+                          <stop offset="100%" stop-color="#4f87ff"/>
+                        </linearGradient>
+                      </defs>
+                      <circle cx="90" cy="90" r="72" stroke="rgba(255,255,255,.08)" stroke-width="14" fill="none"/>
+                      <circle id="cprog" cx="90" cy="90" r="72" stroke="url(#cg)" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="0 1000" stroke-dashoffset="0"/>
+                    </svg>
+                    <div class="cpct" id="cpct">0%</div>
+                  </div>
+                  <div class="cmeta" id="cmeta">Подготовка…</div>
+                </div>
+                <div id="progressWrap" class="section hidden">
+                    <div class="progress">
+                        <div class="bar"></div>
+                    </div>
+                    <div id="ptext" class="hint" style="margin-top:6px"></div>
+                </div>
+
+                <form id="dlForm" class="hidden" method="post" action="/download">
+                    <input type="hidden" name="url" id="dl_url">
+                    <input type="hidden" name="fmt" id="dl_fmt">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const $ = (sel) => document.querySelector(sel);
+        const probeForm = $('#probeForm');
+        const urlEl = $('#url');
+        const choice = $('#choice');
+        const metaBox = $('#meta');
+        const formatsBox = $('#formats');
+        const dlForm = $('#dlForm');
+        const dlUrl = $('#dl_url');
+        const dlFmt = $('#dl_fmt');
+        const downloadBtn = $('#downloadBtn');
+        const msg = $('#msg');
+        const progressWrap = $('#progressWrap');
+        const ptext = $('#ptext');
+        const probeProgress = $('#probeProgress');
+
+        function showProbeProgress(){ probeProgress.classList.remove('hidden'); }
+        function hideProbeProgress(){ probeProgress.classList.add('hidden'); }
+        let selectedFmt = null;
+
+        const barEl = document.querySelector('.bar');
+        function progressIdle(text = '') {
+            progressWrap.classList.remove('hidden');
+            barEl.classList.remove('indet');
+            barEl.style.width = '0%';
+            ptext.textContent = text || '';
+        }
+        function progressIndeterminate(text = '') {
+            progressWrap.classList.remove('hidden');
+            barEl.classList.add('indet');
+            ptext.textContent = text || '';
+        }
+        function progressDeterminate(frac, text = '') {
+            progressWrap.classList.remove('hidden');
+            barEl.classList.remove('indet');
+            const pct = Math.max(0, Math.min(100, Math.round((frac || 0) * 100)));
+            barEl.style.width = pct + '%';
+            ptext.textContent = text || (pct + '%');
+        }
+        function progressHide(){
+            progressWrap.classList.add('hidden');
+            barEl.classList.remove('indet');
+            barEl.style.width = '0%';
+            ptext.textContent = '';
+        }
+
+        // Center circular progress helpers
+        const tableArea = document.getElementById('tableArea');
+        const centerBox = document.getElementById('centerProgress');
+        const cPct = document.getElementById('cpct');
+        const cMeta = document.getElementById('cmeta');
+        const cCircle = document.getElementById('cprog');
+        const cRadius = 72; const cCirc = 2 * Math.PI * cRadius; cCircle.style.strokeDasharray = `${cCirc} ${cCirc}`;
+        function centerIndet(text='Подготовка…'){
+          centerBox.classList.remove('hidden'); centerBox.classList.add('spin');
+          cMeta.textContent = text; cPct.textContent = ' ';
+        }
+        function centerDeterminate(frac, text=''){
+          centerBox.classList.remove('hidden'); centerBox.classList.remove('spin');
+          const pct = Math.max(0, Math.min(100, Math.round((frac||0)*100)));
+          cCircle.style.strokeDashoffset = cCirc * (1 - pct/100);
+          cPct.textContent = pct + '%'; cMeta.textContent = text || '';
+        }
+        function centerHide(){ centerBox.classList.add('hidden'); }
+
+        // ---- WebSocket progress helpers ----
+        function humanBytes(b){ if(!b) return ''; const u=['B','KB','MB','GB','TB']; let v=b,i=0; while(v>=1024&&i<u.length-1){v/=1024;i++;} return (v.toFixed(v>=10?1:2)+' '+u[i]); }
+
+        function handleProgressPayload(info){
+          if (info.status === 'downloading'){
+            const total = info.total_bytes || 0;
+            const done  = info.downloaded_bytes || 0;
+            let frac = 0;
+            if (total) frac = done/total; else {
+              const p=(info.percent||'').replace('%','').trim(); const n=Number(p); frac=isFinite(n)? n/100:0;
+            }
+            const percentText = info.percent || (Math.round(frac*100)+'%');
+            const speed = info.speed ? String(info.speed) : '';
+            const eta   = info.eta   ? String(info.eta)   : '';
+            let line = `Скачивание… ${percentText}`;
+            if (speed) line += ` • ${speed}`;
+            if (eta)   line += ` • ETA ${eta}`;
+            if (total) line += ` • ${humanBytes(done)} / ${humanBytes(total)}`;
+            centerDeterminate(frac, line);
+          } else if (info.status === 'postprocessing'){
+            centerDeterminate(1, 'Обработка файла… 100%');
+          } else if (info.status === 'finished'){
+            centerDeterminate(1, 'Готово! Сохранение файла…');
+            if (info.filepath || info.filename || info.download_url) {
+              // prefer server route
+              if (info.download_url) window.location.href = info.download_url; else if (info.job_id) window.location.href = `/fetch/${info.job_id}`;
+            }
+          } else if (info.status === 'error'){
+            centerDeterminate(0, 'Ошибка: '+(info.error||'unknown'));
+            alert('Ошибка: '+(info.error||'unknown'));
+          }
+        }
+
+        function startWsProgress(jobId){
+          const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+          let finished = false;
+          let ws;
+          try{
+            ws = new WebSocket(`${proto}://${location.host}/ws/progress/${jobId}`);
+          }catch(e){
+            // fallback immediately if constructor fails
+            startPollingProgress(jobId);
+            return;
+          }
+          ws.onmessage = (ev)=>{
+            try{ const info = JSON.parse(ev.data); handleProgressPayload(info); if(info.status==='finished' || info.status==='error'){ finished = true; ws.close(); if(info.status==='finished') window.location.href = `/fetch/${jobId}`; } }
+            catch(_){ /* ignore parse errors */ }
+          };
+          ws.onclose = ()=>{ if(!finished) startPollingProgress(jobId); };
+          ws.onerror = ()=>{ try{ ws.close(); }catch(_){} if(!finished) startPollingProgress(jobId); };
+        }
+
+        function startPollingProgress(jobId){
+          const timer = setInterval(async ()=>{
+            try{
+              const pr = await fetch(`/progress/${jobId}`);
+              if (!pr.ok) return;
+              const info = await pr.json();
+              handleProgressPayload(info);
+              if (info.status === 'finished'){
+                clearInterval(timer);
+                window.location.href = `/fetch/${jobId}`;
+              }
+              if (info.status === 'error'){
+                clearInterval(timer);
+              }
+            }catch(e){ console.error(e); }
+          }, 1000);
+        }
+
+        function renderMeta(meta) {
+            if (!meta || (!meta.title && !meta.thumbnail)) { metaBox.classList.add('hidden'); return; }
+            metaBox.innerHTML = '';
+            if (meta.thumbnail) {
+                const img = document.createElement('img');
+                img.src = meta.thumbnail; img.alt = '';
+                metaBox.appendChild(img);
+            }
+            const box = document.createElement('div');
+            const t = document.createElement('div'); t.className = 'title'; t.textContent = meta.title || 'Видео';
+            const d = document.createElement('div'); d.className = 'hint';
+            if (meta.duration) {
+                const mins = Math.floor(meta.duration / 60), secs = meta.duration % 60;
+                d.textContent = `Длительность: ${mins}:${String(secs).padStart(2, '0')}`;
+            }
+            box.appendChild(t); box.appendChild(d);
+            metaBox.appendChild(box);
+            metaBox.classList.remove('hidden');
+        }
+
+        function renderFormats(list) {
+            const tbody = document.getElementById('formats');
+            tbody.innerHTML = '';
+            selectedFmt = null;
+            downloadBtn.disabled = true;
+            (list || []).forEach(f => {
+                const tr = document.createElement('tr');
+                // radio
+                const tdSel = document.createElement('td');
+                const r = document.createElement('input');
+                r.type = 'radio'; r.name = 'fmt'; r.value = f.fmt; r.className = 'radio';
+                r.onchange = () => { selectedFmt = f.fmt; downloadBtn.disabled = false; };
+                tdSel.appendChild(r); tr.appendChild(tdSel);
+                // type badge
+                const tdType = document.createElement('td');
+                const b = document.createElement('span');
+                b.className = 'badge ' + (f.type || '');
+                b.textContent = (f.type || '').toUpperCase();
+                tdType.appendChild(b); tr.appendChild(tdType);
+                // resolution
+                const tdRes = document.createElement('td'); tdRes.textContent = f.res || '';
+                tr.appendChild(tdRes);
+                // fps
+                const tdFps = document.createElement('td'); tdFps.textContent = f.fps ? parseInt(f.fps) : '';
+                tr.appendChild(tdFps);
+                // ext
+                const tdExt = document.createElement('td'); tdExt.textContent = f.ext || '';
+                tr.appendChild(tdExt);
+                // size
+                const tdSize = document.createElement('td');
+                const sizeMatch = (f.label || '').match(/~([0-9.]+\s(?:KB|MB|GB|TB))/);
+                tdSize.textContent = sizeMatch ? sizeMatch[1] : '';
+                tr.appendChild(tdSize);
+                // tbr
+                const tdTbr = document.createElement('td'); tdTbr.textContent = f.tbr ? (parseInt(f.tbr) + 'k') : '';
+                tr.appendChild(tdTbr);
+                // codecs
+                const tdCd = document.createElement('td');
+                const vc = f.vcodec || ''; const ac = f.acodec || '';
+                tdCd.textContent = [vc, ac].filter(Boolean).join(' • ');
+                tr.appendChild(tdCd);
+                tbody.appendChild(tr);
+            });
+        }
+
+probeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    centerHide(); // hide circular progress if it was visible after previous download
+    msg.textContent = '';
+    showProbeProgress();
+    const fd = new FormData(); fd.append('url', urlEl.value);
+            try {
+                const r = await fetch('/probe', { method: 'POST', body: fd });
+                if (!r.ok) { throw new Error(await r.text()); }
+                const data = await r.json();
+                renderMeta(data.meta || {});
+                renderFormats(data.formats || []);
+                hideProbeProgress();
+                tableArea.classList.remove('collapsed');
+                centerHide();
+                choice.classList.remove('hidden');
+            } catch (err) {
+                msg.classList.add('err');
+                msg.textContent = 'Ошибка: ' + ('' + err).replace(/^Error: /, '');
+                progressIdle('Ошибка при получении форматов');
+                hideProbeProgress();
+            } finally {
+                $('#probeBtn').disabled = false;
+                hideProbeProgress();
+            }
+        });
+
+        downloadBtn.addEventListener('click', async () => {
+            if (!selectedFmt) { return; }
+            const fd = new FormData();
+            fd.append('url', urlEl.value);
+            fd.append('fmt', selectedFmt);
+            msg.textContent = '';
+            tableArea.classList.add('collapsed');
+            progressWrap.classList.add('hidden');
+            centerIndet('Подготовка загрузки…');
+            try {
+                const r = await fetch('/download', { method: 'POST', body: fd });
+                if (!r.ok) { throw new Error(await r.text()); }
+                const data = await r.json();
+                const jobId = data.job_id;
+
+                // WebSocket live progress (with polling fallback if WS fails)
+                startWsProgress(jobId);
+
+            } catch (err) {
+                msg.classList.add('err');
+                msg.textContent = 'Ошибка: ' + ('' + err).replace(/^Error: /, '');
+                progressIdle('Ошибка при запуске');
+            }
+        });
+    </script>
+</body>
