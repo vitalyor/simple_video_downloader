@@ -1,5 +1,10 @@
 fastapi
 uvicorn[standard]
 yt-dlp
-Jinja2
 python-multipart
+jinja2
+pydantic
+pydantic-settings
+python-dotenv
+redis
+aiofiles
