@@ -1,58 +1,47 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 from pathlib import Path
-import json
-
+import os
 
 class Settings(BaseSettings):
     app_name: str = "Video Downloader"
     debug: bool = False
-
-    # Paths
-    temp_dir: Path = Path("/tmp/video_downloads")
-    cookies_dir: Path = Path(__file__).parent / "cookies"
-
+    
+    # Paths - используем переменные окружения из docker-compose
+    temp_dir: Path = Path(os.getenv("TEMP_DIR", "/downloads/temp"))
+    cookies_dir: Path = Path(os.getenv("COOKIES_DIR", "/app/cookies"))
+    
     # Limits
-    max_file_size: int = 2 * 1024 * 1024 * 1024  # 2GB
-    max_concurrent_downloads: int = 3
-    job_ttl_hours: int = 24
-    rate_limit_per_minute: int = 10
-
+    max_file_size: int = int(os.getenv("MAX_FILE_SIZE", str(5 * 1024 * 1024 * 1024)))  # 5GB default
+    max_concurrent_downloads: int = int(os.getenv("MAX_CONCURRENT_DOWNLOADS", "3"))
+    job_ttl_hours: int = int(os.getenv("JOB_TTL_HOURS", "24"))
+    rate_limit_per_minute: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "20"))
+    
     # Security
-    secret_key: str = "change-this-secret-key"
-    allowed_origins: List[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    secret_key: str = os.getenv("SECRET_KEY", "change-this-secret-key")
+    
+    # Парсим allowed_origins из переменной окружения
+    @property
+    def allowed_origins(self) -> List[str]:
+        origins = os.getenv("ALLOWED_ORIGINS", "https://video.vitalyor.online,http://localhost:8000")
+        return [origin.strip() for origin in origins.split(",")]
+    
+    # Поддерживаемые домены
     allowed_domains: List[str] = [
-        "youtube.com",
-        "youtu.be",
-        "instagram.com",
-        "tiktok.com",
-        "twitter.com",
-        "x.com",
-        "vimeo.com",
-        "dailymotion.com",
+        "youtube.com", "youtu.be",
+        "instagram.com", "tiktok.com",
+        "twitter.com", "x.com",
+        "vimeo.com", "dailymotion.com",
+        "reddit.com", "v.redd.it",
+        "facebook.com", "fb.watch"
     ]
-
-    # Redis (optional)
-    redis_url: Optional[str] = None
-
+    
     class Config:
         env_file = ".env"
+        env_file_encoding = 'utf-8'
+        env_ignore_empty = True
 
-        # Парсим JSON для сложных типов
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str):
-            if field_name in ("allowed_origins", "allowed_domains"):
-                # Если строка выглядит как JSON список
-                if raw_val.startswith("["):
-                    return json.loads(raw_val)
-                # Если просто строка с запятыми
-                return [x.strip() for x in raw_val.split(",")]
-            return raw_val
-
-
-# Создаём экземпляр настроек
 settings = Settings()
 
 # Создаём необходимые директории
 settings.temp_dir.mkdir(parents=True, exist_ok=True)
-settings.cookies_dir.mkdir(parents=True, exist_ok=True)
