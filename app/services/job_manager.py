@@ -3,7 +3,6 @@ from typing import Dict, Optional, Set
 from datetime import datetime, timedelta
 from pathlib import Path
 import shutil
-import os
 from app.models import JobStatus
 from app.config import settings
 from fastapi import WebSocket
@@ -33,7 +32,12 @@ class JobManager:
         for job_id, job in self.jobs.items():
             if job.filepath and Path(job.filepath).exists():
                 try:
-                    Path(job.filepath).unlink()
+                    filepath = Path(job.filepath)
+                    # Удаляем только временные файлы
+                    if str(settings.temp_dir) in str(filepath):
+                        parent = filepath.parent
+                        if parent.exists():
+                            shutil.rmtree(parent, ignore_errors=True)
                 except:
                     pass
     
@@ -55,7 +59,7 @@ class JobManager:
         
         expired_jobs = []
         for job_id, job in self.jobs.items():
-            if now - job.created_at > ttl:
+            if job.created_at and now - job.created_at > ttl:
                 expired_jobs.append(job_id)
         
         for job_id in expired_jobs:
@@ -93,13 +97,11 @@ class JobManager:
             # Cleanup file
             if job.filepath and Path(job.filepath).exists():
                 try:
-                    # If file is in temp dir, remove parent directory too
                     filepath = Path(job.filepath)
                     if str(settings.temp_dir) in str(filepath):
                         parent = filepath.parent
-                        shutil.rmtree(parent, ignore_errors=True)
-                    else:
-                        filepath.unlink()
+                        if parent.exists():
+                            shutil.rmtree(parent, ignore_errors=True)
                 except:
                     pass
             

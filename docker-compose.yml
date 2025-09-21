@@ -1,15 +1,38 @@
-version: '3.8'
+networks:
+  web:
+    external: true
 
 services:
-  app:
-    build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - downloads:/tmp/video_downloads
-    environment:
-      - TEMP_DIR=/tmp/video_downloads
+  simple-video-downloader:
+    build:
+      context: /opt/stacks/apps/simple_video_downloader
+    container_name: simple-video-downloader
     restart: unless-stopped
+    networks: [ web ]
+    volumes:
+      - /opt/data/simple-video-downloader/downloads:/downloads
+      - /opt/stacks/apps/simple_video_downloader/app/cookies:/app/cookies:ro
+    environment:
+      # Основные настройки
+      - TEMP_DIR=/downloads/temp
+      - MAX_FILE_SIZE=5368709120 # 5GB
+      - MAX_CONCURRENT_DOWNLOADS=3
+      - JOB_TTL_HOURS=24
+      - RATE_LIMIT_PER_MINUTE=20
 
-volumes:
-  downloads:
+      # Пути
+      - COOKIES_DIR=/app/cookies
+
+      # Безопасность
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - ALLOWED_ORIGINS=https://video.vitalyor.online
+
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.svd.rule=Host(`video.vitalyor.online`)
+      - traefik.http.routers.svd.entrypoints=websecure
+      - traefik.http.routers.svd.tls.certresolver=letsencrypt
+      - traefik.http.services.svd.loadbalancer.server.port=8000
+
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=* --log-level info --access-log
