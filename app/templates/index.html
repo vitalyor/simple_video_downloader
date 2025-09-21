@@ -1,631 +1,884 @@
+<!DOCTYPE html>
+<html lang="ru">
+
 <head>
     <meta charset="utf-8">
-    <title>Simple Video Downloader</title>
+    <title>Video Downloader</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>
         :root {
             --bg: #0b1220;
-            /* page bg */
             --panel: #121a2b;
-            /* cards */
             --panel-2: #0f1727;
-            /* inputs */
             --text: #e6edf7;
-            /* main text */
             --muted: #8aa0c5;
-            /* muted */
             --primary: #4f87ff;
-            /* buttons */
-            --primary-2: #7aa1ff;
-            /* hover */
             --accent: #22d3ee;
-            /* accents */
             --border: #203052;
-            /* borders */
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
 
         * {
-            box-sizing: border-box
+            box-sizing: border-box;
         }
 
         html,
         body {
-            height: 100%
+            height: 100%;
+            margin: 0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             line-height: 1.5;
             color: var(--text);
-            background: radial-gradient(1200px 600px at 20% -10%, #182341 0%, #0b1220 60%);
-            padding: 32px
-        }
-
-        h2 {
-            margin: 0 0 16px;
-            font-size: 24px;
-            font-weight: 700
+            background: radial-gradient(1200px 600px at 20% -10%, #182341 0%, var(--bg) 60%);
+            padding: 32px;
         }
 
         .container {
             max-width: 980px;
-            margin: 0 auto
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 0 0 24px;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .panel {
             background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
             border: 1px solid var(--border);
             border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .35)
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+            padding: 24px;
         }
 
-        .pad {
-            padding: 16px
-        }
-
-        .row {
+        .form-group {
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: center
         }
 
-        .section {
-            margin-top: 16px
-        }
-
-        .fmtlist {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 10px
-        }
-
-        .card {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.02);
-            display: flex;
-            gap: 10px;
-            align-items: flex-start
-        }
-
-        .hint {
-            color: var(--muted);
-            font-size: 12px
-        }
-
-        input[type=url] {
+        input[type="url"] {
             flex: 1;
             min-width: 300px;
-            padding: 10px 12px;
+            padding: 12px 16px;
             border-radius: 10px;
             border: 1px solid var(--border);
             background: var(--panel-2);
-            color: var(--text)
+            color: var(--text);
+            font-size: 16px;
+            transition: border-color 0.2s;
         }
 
-        input[type=url]::placeholder {
-            color: #90a3c7
+        input[type="url"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        input[type="url"]::placeholder {
+            color: var(--muted);
         }
 
         .btn {
-            padding: 10px 14px;
+            padding: 12px 20px;
             border: 1px solid var(--border);
             border-radius: 10px;
-            background: linear-gradient(180deg, #3b6cff, #2f5cff);
+            background: linear-gradient(180deg, var(--primary), #3b6cff);
             color: white;
             cursor: pointer;
             display: inline-flex;
             gap: 8px;
             align-items: center;
-            font-weight: 600
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.1s, box-shadow 0.2s;
         }
 
         .btn:hover {
-            background: linear-gradient(180deg, #5681ff, #3f6cff)
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(79, 135, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
         }
 
         .btn:disabled {
-            opacity: .6;
-            cursor: not-allowed
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .radio {
-            appearance: none;
-            margin: 0;
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--primary-2);
-            border-radius: 50%;
-            display: inline-block;
-            position: relative;
-            flex: none
+        .btn.secondary {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
         }
 
-        .radio:checked {
-            border-color: var(--accent)
-        }
-
-        .radio:checked::after {
-            content: "";
-            position: absolute;
-            inset: 3px;
-            background: var(--accent);
-            border-radius: 50%
-        }
-
+        /* Meta info */
         .meta {
             display: flex;
-            gap: 14px
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .meta.hidden {
+            display: none;
         }
 
         .meta img {
-            width: 120px;
-            height: 68px;
+            width: 160px;
+            height: 90px;
             object-fit: cover;
-            border-radius: 10px;
-            border: 1px solid var(--border)
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
-        .title {
-            font-weight: 700
+        .meta-info {
+            flex: 1;
         }
 
-        .progress {
-            height: 10px;
-            background: rgba(255, 255, 255, .08);
+        .meta-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .meta-details {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Progress indicators */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border);
             border-radius: 999px;
-            overflow: hidden
+            overflow: hidden;
+            margin-bottom: 8px;
         }
 
-        .bar {
+        .progress-fill {
             height: 100%;
             width: 0;
             background: linear-gradient(90deg, var(--accent), var(--primary));
-            transition: width .2s linear
+            transition: width 0.3s ease;
         }
 
-        .bar.indet {
-            width: 40%;
-            animation: indet 1.1s infinite
+        .progress-fill.indeterminate {
+            width: 30%;
+            animation: indeterminate 1.5s infinite;
         }
 
-        @keyframes indet {
+        @keyframes indeterminate {
             0% {
-                margin-left: -40%
+                margin-left: -30%;
             }
 
             100% {
-                margin-left: 100%
+                margin-left: 100%;
             }
         }
 
-        .footer {
-            display: flex;
-            align-items: center;
-            gap: 12px
+        .progress-text {
+            font-size: 14px;
+            color: var(--muted);
         }
 
-        .ok {
-            color: var(--success)
-        }
-
-        .err {
-            color: var(--danger)
-        }
-
-        table.grid {
+        /* Formats table */
+        .formats-table {
             width: 100%;
             border-collapse: separate;
-            border-spacing: 0 8px
+            border-spacing: 0 8px;
         }
 
-        table.grid th,
-        table.grid td {
-            padding: 10px 12px;
-            text-align: left
-        }
-
-        table.grid thead th {
+        .formats-table thead th {
+            text-align: left;
             font-size: 12px;
             color: var(--muted);
-            font-weight: 600
+            font-weight: 600;
+            padding: 8px 12px;
+            text-transform: uppercase;
         }
 
-        table.grid tbody tr {
-            background: rgba(255, 255, 255, .02);
-            border: 1px solid var(--border)
+        .formats-table tbody tr {
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        table.grid tbody tr td:first-child {
-            border-radius: 10px 0 0 10px
+        .formats-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.04);
         }
 
-        table.grid tbody tr td:last-child {
-            border-radius: 0 10px 10px 0
+        .formats-table tbody tr.selected {
+            background: rgba(79, 135, 255, 0.1);
         }
 
+        .formats-table td {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .formats-table td:first-child {
+            border-left: 1px solid var(--border);
+            border-radius: 10px 0 0 10px;
+        }
+
+        .formats-table td:last-child {
+            border-right: 1px solid var(--border);
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* Radio button */
+        .radio {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .radio:checked {
+            border-color: var(--accent);
+        }
+
+        .radio:checked::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        /* Badge */
         .badge {
             display: inline-block;
             padding: 2px 8px;
             border-radius: 999px;
-            font-size: 12px;
-            border: 1px solid var(--border);
-            color: var(--text);
-            background: rgba(255, 255, 255, .04)
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         .badge.av {
-            border-color: #2ad1ff;
-            color: #2ad1ff
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent);
+            border: 1px solid var(--accent);
         }
 
         .badge.video {
-            border-color: #7aa1ff;
-            color: #7aa1ff
+            background: rgba(79, 135, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
         }
 
-        .badge.audio {
-            border-color: #a1a1a1;
-            color: #a1a1a1
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            right: -400px;
+            min-width: 300px;
+            max-width: 400px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transition: right 0.3s ease;
+            z-index: 1000;
         }
 
-        /* collapsible table area */
-        #tableArea{transition:max-height .4s ease, opacity .35s ease; max-height:1500px}
-        #tableArea.collapsed{max-height:0; opacity:0; overflow:hidden; pointer-events:none}
+        .toast.show {
+            right: 32px;
+        }
 
-        /* utility: hide elements */
-        .hidden{ display:none !important }
+        .toast-content {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
 
-        /* centered circular progress */
-        .center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;padding:24px 0}
-        .spinner{position:relative;width:180px;height:180px}
-        .spinner svg{display:block;transform:rotate(-90deg)}
-        .cpct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;color:var(--text)}
-        .cmeta{margin-top:12px;font-size:14px;color:var(--muted)}
-        /* indeterminate sweep */
-        .spin .cpct{font-size:18px;opacity:.9}
-        .spin #cprog{animation:spin-sweep 1.1s linear infinite;stroke-dasharray:120 480}
-        @keyframes spin-sweep{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-600}}
+        .toast.error {
+            border-color: var(--danger);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), var(--panel));
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), var(--panel));
+        }
+
+        .toast.warning {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--panel));
+        }
+
+        .toast-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast-close:hover {
+            color: var(--text);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hidden utility */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .formats-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .meta {
+                flex-direction: column;
+            }
+
+            .meta img {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 16/9;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h2>Скачать видео</h2>
+        <h1>Video Downloader</h1>
 
-        <div class="panel pad">
-            <form id="probeForm" class="row" style="margin-bottom:12px">
-                <input type="url" id="url" placeholder="Вставьте ссылку на видео" required>
-                <button type="submit" id="probeBtn" class="btn" title="Показать форматы">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="white"
-                            stroke-width="2" />
+        <div class="panel">
+            <!-- URL Input Form -->
+            <form id="probeForm" class="form-group">
+                <input type="url" id="urlInput" placeholder="Вставьте ссылку на видео (YouTube, Instagram, TikTok...)"
+                    required autocomplete="off">
+                <button type="submit" class="btn" id="probeBtn">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    Показать форматы
+                    Анализировать
                 </button>
             </form>
 
-            <div id="meta" class="meta hidden" style="margin-bottom:12px"></div>
-
-            <div id="probeProgress" class="section hidden">
-              <div class="progress"><div class="bar indet"></div></div>
-              <div class="hint" style="margin-top:6px">Загружаю форматы…</div>
+            <!-- Loading state -->
+            <div id="loadingSection" class="hidden">
+                <div class="progress-bar">
+                    <div class="progress-fill indeterminate"></div>
+                </div>
+                <div class="progress-text">Анализирую видео...</div>
             </div>
 
-            <div id="choice" class="hidden">
-                <div class="hint" style="margin-bottom:8px;">Список — «как есть» от yt-dlp. Для VIDEO-only звук
-                    добавится автоматически.</div>
-                <div id="tableArea">
-                  <table class="grid" id="fmtTable">
-                    <thead>
-                      <tr>
-                        <th style="width:36px;"></th>
-                        <th>Тип</th>
-                        <th>Разрешение</th>
-                        <th>FPS</th>
-                        <th>Контейнер</th>
-                        <th>Размер</th>
-                        <th>Битрейт</th>
-                        <th>Кодеки</th>
-                      </tr>
-                    </thead>
-                    <tbody id="formats"></tbody>
-                  </table>
-                  <div class="section footer">
-                    <button type="button" id="downloadBtn" class="btn" disabled>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
-                      Скачать выбранное
-                    </button>
-                    <span id="msg" class="hint"></span>
-                  </div>
+            <!-- Video meta info -->
+            <div id="metaSection" class="meta hidden">
+                <img id="metaThumbnail" src="" alt="">
+                <div class="meta-info">
+                    <div class="meta-title" id="metaTitle"></div>
+                    <div class="meta-details" id="metaDetails"></div>
                 </div>
-                <div id="centerProgress" class="center hidden">
-                  <div class="spinner">
-                    <svg width="180" height="180" viewBox="0 0 180 180">
-                      <defs>
-                        <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stop-color="#22d3ee"/>
-                          <stop offset="100%" stop-color="#4f87ff"/>
-                        </linearGradient>
-                      </defs>
-                      <circle cx="90" cy="90" r="72" stroke="rgba(255,255,255,.08)" stroke-width="14" fill="none"/>
-                      <circle id="cprog" cx="90" cy="90" r="72" stroke="url(#cg)" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="0 1000" stroke-dashoffset="0"/>
-                    </svg>
-                    <div class="cpct" id="cpct">0%</div>
-                  </div>
-                  <div class="cmeta" id="cmeta">Подготовка…</div>
-                </div>
-                <div id="progressWrap" class="section hidden">
-                    <div class="progress">
-                        <div class="bar"></div>
-                    </div>
-                    <div id="ptext" class="hint" style="margin-top:6px"></div>
-                </div>
+            </div>
 
-                <form id="dlForm" class="hidden" method="post" action="/download">
-                    <input type="hidden" name="url" id="dl_url">
-                    <input type="hidden" name="fmt" id="dl_fmt">
-                </form>
+            <!-- Formats selection -->
+            <div id="formatsSection" class="hidden">
+                <h3 style="margin: 20px 0 12px; font-size: 18px;">Выберите формат:</h3>
+                <table class="formats-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px"></th>
+                            <th>Тип</th>
+                            <th>Разрешение</th>
+                            <th>Размер</th>
+                            <th>Кодек</th>
+                        </tr>
+                    </thead>
+                    <tbody id="formatsTableBody"></tbody>
+                </table>
+
+                <div style="margin-top: 20px; display: flex; gap: 12px;">
+                    <button id="downloadBtn" class="btn" disabled>
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                d="M12 3v12m0 0l-4-4m4 4l4-4M5 20h14" />
+                        </svg>
+                        Скачать
+                    </button>
+                    <button id="cancelBtn" class="btn secondary">
+                        Отмена
+                    </button>
+                </div>
+            </div>
+
+            <!-- Download progress -->
+            <div id="downloadSection" class="hidden">
+                <h3 style="margin: 20px 0 12px; font-size: 18px;">Загрузка:</h3>
+                <div class="progress-bar">
+                    <div id="downloadProgress" class="progress-fill"></div>
+                </div>
+                <div id="downloadText" class="progress-text">Подготовка...</div>
             </div>
         </div>
     </div>
 
     <script>
-        const $ = (sel) => document.querySelector(sel);
-        const probeForm = $('#probeForm');
-        const urlEl = $('#url');
-        const choice = $('#choice');
-        const metaBox = $('#meta');
-        const formatsBox = $('#formats');
-        const dlForm = $('#dlForm');
-        const dlUrl = $('#dl_url');
-        const dlFmt = $('#dl_fmt');
-        const downloadBtn = $('#downloadBtn');
-        const msg = $('#msg');
-        const progressWrap = $('#progressWrap');
-        const ptext = $('#ptext');
-        const probeProgress = $('#probeProgress');
+        // State management
+        const state = {
+            currentJobId: null,
+            selectedFormat: null,
+            ws: null
+        };
 
-        function showProbeProgress(){ probeProgress.classList.remove('hidden'); }
-        function hideProbeProgress(){ probeProgress.classList.add('hidden'); }
-        let selectedFmt = null;
+        // DOM elements
+        const elements = {
+            urlInput: document.getElementById('urlInput'),
+            probeForm: document.getElementById('probeForm'),
+            probeBtn: document.getElementById('probeBtn'),
+            loadingSection: document.getElementById('loadingSection'),
+            metaSection: document.getElementById('metaSection'),
+            metaThumbnail: document.getElementById('metaThumbnail'),
+            metaTitle: document.getElementById('metaTitle'),
+            metaDetails: document.getElementById('metaDetails'),
+            formatsSection: document.getElementById('formatsSection'),
+            formatsTableBody: document.getElementById('formatsTableBody'),
+            downloadBtn: document.getElementById('downloadBtn'),
+            cancelBtn: document.getElementById('cancelBtn'),
+            downloadSection: document.getElementById('downloadSection'),
+            downloadProgress: document.getElementById('downloadProgress'),
+            downloadText: document.getElementById('downloadText')
+        };
 
-        const barEl = document.querySelector('.bar');
-        function progressIdle(text = '') {
-            progressWrap.classList.remove('hidden');
-            barEl.classList.remove('indet');
-            barEl.style.width = '0%';
-            ptext.textContent = text || '';
-        }
-        function progressIndeterminate(text = '') {
-            progressWrap.classList.remove('hidden');
-            barEl.classList.add('indet');
-            ptext.textContent = text || '';
-        }
-        function progressDeterminate(frac, text = '') {
-            progressWrap.classList.remove('hidden');
-            barEl.classList.remove('indet');
-            const pct = Math.max(0, Math.min(100, Math.round((frac || 0) * 100)));
-            barEl.style.width = pct + '%';
-            ptext.textContent = text || (pct + '%');
-        }
-        function progressHide(){
-            progressWrap.classList.add('hidden');
-            barEl.classList.remove('indet');
-            barEl.style.width = '0%';
-            ptext.textContent = '';
-        }
+        // Toast notifications
+        class Toast {
+            static show(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `
+                    <div class="toast-content">
+                        <span>${this.escapeHtml(message)}</span>
+                    </div>
+                    <button class="toast-close">×</button>
+                `;
 
-        // Center circular progress helpers
-        const tableArea = document.getElementById('tableArea');
-        const centerBox = document.getElementById('centerProgress');
-        const cPct = document.getElementById('cpct');
-        const cMeta = document.getElementById('cmeta');
-        const cCircle = document.getElementById('cprog');
-        const cRadius = 72; const cCirc = 2 * Math.PI * cRadius; cCircle.style.strokeDasharray = `${cCirc} ${cCirc}`;
-        function centerIndet(text='Подготовка…'){
-          centerBox.classList.remove('hidden'); centerBox.classList.add('spin');
-          cMeta.textContent = text; cPct.textContent = ' ';
-        }
-        function centerDeterminate(frac, text=''){
-          centerBox.classList.remove('hidden'); centerBox.classList.remove('spin');
-          const pct = Math.max(0, Math.min(100, Math.round((frac||0)*100)));
-          cCircle.style.strokeDashoffset = cCirc * (1 - pct/100);
-          cPct.textContent = pct + '%'; cMeta.textContent = text || '';
-        }
-        function centerHide(){ centerBox.classList.add('hidden'); }
+                document.body.appendChild(toast);
 
-        // ---- WebSocket progress helpers ----
-        function humanBytes(b){ if(!b) return ''; const u=['B','KB','MB','GB','TB']; let v=b,i=0; while(v>=1024&&i<u.length-1){v/=1024;i++;} return (v.toFixed(v>=10?1:2)+' '+u[i]); }
+                // Animation
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
 
-        function handleProgressPayload(info){
-          if (info.status === 'downloading'){
-            const total = info.total_bytes || 0;
-            const done  = info.downloaded_bytes || 0;
-            let frac = 0;
-            if (total) frac = done/total; else {
-              const p=(info.percent||'').replace('%','').trim(); const n=Number(p); frac=isFinite(n)? n/100:0;
+                // Auto remove
+                const timeout = setTimeout(() => this.hide(toast), 5000);
+
+                // Close button
+                toast.querySelector('.toast-close').onclick = () => {
+                    clearTimeout(timeout);
+                    this.hide(toast);
+                };
             }
-            const percentText = info.percent || (Math.round(frac*100)+'%');
-            const speed = info.speed ? String(info.speed) : '';
-            const eta   = info.eta   ? String(info.eta)   : '';
-            let line = `Скачивание… ${percentText}`;
-            if (speed) line += ` • ${speed}`;
-            if (eta)   line += ` • ETA ${eta}`;
-            if (total) line += ` • ${humanBytes(done)} / ${humanBytes(total)}`;
-            centerDeterminate(frac, line);
-          } else if (info.status === 'postprocessing'){
-            centerDeterminate(1, 'Обработка файла… 100%');
-          } else if (info.status === 'finished'){
-            centerDeterminate(1, 'Готово! Сохранение файла…');
-            if (info.filepath || info.filename || info.download_url) {
-              // prefer server route
-              if (info.download_url) window.location.href = info.download_url; else if (info.job_id) window.location.href = `/fetch/${info.job_id}`;
+
+            static hide(toast) {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
             }
-          } else if (info.status === 'error'){
-            centerDeterminate(0, 'Ошибка: '+(info.error||'unknown'));
-            alert('Ошибка: '+(info.error||'unknown'));
-          }
-        }
 
-        function startWsProgress(jobId){
-          const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-          let finished = false;
-          let ws;
-          try{
-            ws = new WebSocket(`${proto}://${location.host}/ws/progress/${jobId}`);
-          }catch(e){
-            // fallback immediately if constructor fails
-            startPollingProgress(jobId);
-            return;
-          }
-          ws.onmessage = (ev)=>{
-            try{ const info = JSON.parse(ev.data); handleProgressPayload(info); if(info.status==='finished' || info.status==='error'){ finished = true; ws.close(); if(info.status==='finished') window.location.href = `/fetch/${jobId}`; } }
-            catch(_){ /* ignore parse errors */ }
-          };
-          ws.onclose = ()=>{ if(!finished) startPollingProgress(jobId); };
-          ws.onerror = ()=>{ try{ ws.close(); }catch(_){} if(!finished) startPollingProgress(jobId); };
-        }
-
-        function startPollingProgress(jobId){
-          const timer = setInterval(async ()=>{
-            try{
-              const pr = await fetch(`/progress/${jobId}`);
-              if (!pr.ok) return;
-              const info = await pr.json();
-              handleProgressPayload(info);
-              if (info.status === 'finished'){
-                clearInterval(timer);
-                window.location.href = `/fetch/${jobId}`;
-              }
-              if (info.status === 'error'){
-                clearInterval(timer);
-              }
-            }catch(e){ console.error(e); }
-          }, 1000);
-        }
-
-        function renderMeta(meta) {
-            if (!meta || (!meta.title && !meta.thumbnail)) { metaBox.classList.add('hidden'); return; }
-            metaBox.innerHTML = '';
-            if (meta.thumbnail) {
-                const img = document.createElement('img');
-                img.src = meta.thumbnail; img.alt = '';
-                metaBox.appendChild(img);
+            static escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
-            const box = document.createElement('div');
-            const t = document.createElement('div'); t.className = 'title'; t.textContent = meta.title || 'Видео';
-            const d = document.createElement('div'); d.className = 'hint';
-            if (meta.duration) {
-                const mins = Math.floor(meta.duration / 60), secs = meta.duration % 60;
-                d.textContent = `Длительность: ${mins}:${String(secs).padStart(2, '0')}`;
-            }
-            box.appendChild(t); box.appendChild(d);
-            metaBox.appendChild(box);
-            metaBox.classList.remove('hidden');
         }
 
-        function renderFormats(list) {
-            const tbody = document.getElementById('formats');
-            tbody.innerHTML = '';
-            selectedFmt = null;
-            downloadBtn.disabled = true;
-            (list || []).forEach(f => {
+        // Format file size
+        function formatBytes(bytes) {
+            if (!bytes) return '';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let i = 0;
+            let value = bytes;
+            while (value >= 1024 && i < units.length - 1) {
+                value /= 1024;
+                i++;
+            }
+            return `${value.toFixed(1)} ${units[i]}`;
+        }
+
+        // Format duration
+        function formatDuration(seconds) {
+            if (!seconds) return '';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+
+            if (h > 0) {
+                return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // Reset UI
+        function resetUI() {
+            elements.loadingSection.classList.add('hidden');
+            elements.metaSection.classList.add('hidden');
+            elements.formatsSection.classList.add('hidden');
+            elements.downloadSection.classList.add('hidden');
+            state.selectedFormat = null;
+            elements.downloadBtn.disabled = true;
+        }
+
+        // Handle probe form submission
+        elements.probeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = elements.urlInput.value.trim();
+            if (!url) return;
+
+            resetUI();
+            elements.loadingSection.classList.remove('hidden');
+            elements.probeBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('url', url);
+
+                const response = await fetch('/probe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to analyze video');
+                }
+
+                const data = await response.json();
+
+                // Show meta info
+                if (data.meta) {
+                    elements.metaSection.classList.remove('hidden');
+
+                    if (data.meta.thumbnail) {
+                        elements.metaThumbnail.src = data.meta.thumbnail;
+                        elements.metaThumbnail.onerror = () => {
+                            elements.metaThumbnail.style.display = 'none';
+                        };
+                    }
+
+                    elements.metaTitle.textContent = data.meta.title || 'Видео';
+
+                    const details = [];
+                    if (data.meta.duration) {
+                        details.push(`Длительность: ${formatDuration(data.meta.duration)}`);
+                    }
+                    elements.metaDetails.textContent = details.join(' • ');
+                }
+
+                // Show formats
+                if (data.formats && data.formats.length > 0) {
+                    renderFormats(data.formats);
+                    elements.formatsSection.classList.remove('hidden');
+                } else {
+                    Toast.show('Не найдено доступных форматов', 'warning');
+                }
+
+            } catch (error) {
+                console.error('Probe error:', error);
+                Toast.show(error.message || 'Ошибка при анализе видео', 'error');
+            } finally {
+                elements.loadingSection.classList.add('hidden');
+                elements.probeBtn.disabled = false;
+            }
+        });
+
+        // Render formats table
+        function renderFormats(formats) {
+            elements.formatsTableBody.innerHTML = '';
+
+            formats.forEach((format, index) => {
                 const tr = document.createElement('tr');
-                // radio
-                const tdSel = document.createElement('td');
-                const r = document.createElement('input');
-                r.type = 'radio'; r.name = 'fmt'; r.value = f.fmt; r.className = 'radio';
-                r.onchange = () => { selectedFmt = f.fmt; downloadBtn.disabled = false; };
-                tdSel.appendChild(r); tr.appendChild(tdSel);
-                // type badge
+
+                // Radio
+                const tdRadio = document.createElement('td');
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'format';
+                radio.className = 'radio';
+                radio.value = format.fmt;
+                radio.onchange = () => {
+                    state.selectedFormat = format.fmt;
+                    elements.downloadBtn.disabled = false;
+
+                    // Update selected row
+                    document.querySelectorAll('.formats-table tr').forEach(r => {
+                        r.classList.remove('selected');
+                    });
+                    tr.classList.add('selected');
+                };
+
+                // Select first format by default
+                if (index === 0) {
+                    radio.checked = true;
+                    radio.onchange();
+                }
+
+                tdRadio.appendChild(radio);
+                tr.appendChild(tdRadio);
+
+                // Type badge
                 const tdType = document.createElement('td');
-                const b = document.createElement('span');
-                b.className = 'badge ' + (f.type || '');
-                b.textContent = (f.type || '').toUpperCase();
-                tdType.appendChild(b); tr.appendChild(tdType);
-                // resolution
-                const tdRes = document.createElement('td'); tdRes.textContent = f.res || '';
+                const badge = document.createElement('span');
+                badge.className = `badge ${format.type}`;
+                badge.textContent = format.type.toUpperCase();
+                tdType.appendChild(badge);
+                tr.appendChild(tdType);
+
+                // Resolution
+                const tdRes = document.createElement('td');
+                tdRes.textContent = format.res || format.label.match(/\d+p/) || '-';
                 tr.appendChild(tdRes);
-                // fps
-                const tdFps = document.createElement('td'); tdFps.textContent = f.fps ? parseInt(f.fps) : '';
-                tr.appendChild(tdFps);
-                // ext
-                const tdExt = document.createElement('td'); tdExt.textContent = f.ext || '';
-                tr.appendChild(tdExt);
-                // size
+
+                // Size (extract from label)
                 const tdSize = document.createElement('td');
-                const sizeMatch = (f.label || '').match(/~([0-9.]+\s(?:KB|MB|GB|TB))/);
-                tdSize.textContent = sizeMatch ? sizeMatch[1] : '';
+                const sizeMatch = format.label.match(/(\d+(?:\.\d+)?\s*[KMGT]B)/i);
+                tdSize.textContent = sizeMatch ? sizeMatch[1] : '-';
                 tr.appendChild(tdSize);
-                // tbr
-                const tdTbr = document.createElement('td'); tdTbr.textContent = f.tbr ? (parseInt(f.tbr) + 'k') : '';
-                tr.appendChild(tdTbr);
-                // codecs
-                const tdCd = document.createElement('td');
-                const vc = f.vcodec || ''; const ac = f.acodec || '';
-                tdCd.textContent = [vc, ac].filter(Boolean).join(' • ');
-                tr.appendChild(tdCd);
-                tbody.appendChild(tr);
+
+                // Codecs
+                const tdCodec = document.createElement('td');
+                const codecs = [];
+                if (format.vcodec && format.vcodec !== 'none') {
+                    codecs.push(format.vcodec);
+                }
+                if (format.acodec && format.acodec !== 'none') {
+                    codecs.push(format.acodec);
+                }
+                tdCodec.textContent = codecs.join(', ') || '-';
+                tr.appendChild(tdCodec);
+
+                elements.formatsTableBody.appendChild(tr);
             });
         }
 
-probeForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    centerHide(); // hide circular progress if it was visible after previous download
-    msg.textContent = '';
-    showProbeProgress();
-    const fd = new FormData(); fd.append('url', urlEl.value);
+        // Handle download
+        elements.downloadBtn.addEventListener('click', async () => {
+            if (!state.selectedFormat) return;
+
+            const url = elements.urlInput.value.trim();
+            if (!url) return;
+
+            elements.formatsSection.classList.add('hidden');
+            elements.downloadSection.classList.remove('hidden');
+
             try {
-                const r = await fetch('/probe', { method: 'POST', body: fd });
-                if (!r.ok) { throw new Error(await r.text()); }
-                const data = await r.json();
-                renderMeta(data.meta || {});
-                renderFormats(data.formats || []);
-                hideProbeProgress();
-                tableArea.classList.remove('collapsed');
-                centerHide();
-                choice.classList.remove('hidden');
-            } catch (err) {
-                msg.classList.add('err');
-                msg.textContent = 'Ошибка: ' + ('' + err).replace(/^Error: /, '');
-                progressIdle('Ошибка при получении форматов');
-                hideProbeProgress();
-            } finally {
-                $('#probeBtn').disabled = false;
-                hideProbeProgress();
+                const formData = new FormData();
+                formData.append('url', url);
+                formData.append('fmt', state.selectedFormat);
+
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || 'Failed to start download');
+                }
+
+                const data = await response.json();
+                state.currentJobId = data.job_id;
+
+                // Start WebSocket for progress
+                startProgressTracking(data.job_id);
+
+            } catch (error) {
+                console.error('Download error:', error);
+                Toast.show(error.message || 'Ошибка при запуске загрузки', 'error');
+                resetUI();
             }
         });
 
-        downloadBtn.addEventListener('click', async () => {
-            if (!selectedFmt) { return; }
-            const fd = new FormData();
-            fd.append('url', urlEl.value);
-            fd.append('fmt', selectedFmt);
-            msg.textContent = '';
-            tableArea.classList.add('collapsed');
-            progressWrap.classList.add('hidden');
-            centerIndet('Подготовка загрузки…');
-            try {
-                const r = await fetch('/download', { method: 'POST', body: fd });
-                if (!r.ok) { throw new Error(await r.text()); }
-                const data = await r.json();
-                const jobId = data.job_id;
-
-                // WebSocket live progress (with polling fallback if WS fails)
-                startWsProgress(jobId);
-
-            } catch (err) {
-                msg.classList.add('err');
-                msg.textContent = 'Ошибка: ' + ('' + err).replace(/^Error: /, '');
-                progressIdle('Ошибка при запуске');
+        // Cancel button
+        elements.cancelBtn.addEventListener('click', () => {
+            if (state.ws) {
+                state.ws.close();
+                state.ws = null;
             }
+            resetUI();
+            Toast.show('Загрузка отменена', 'info');
+        });
+
+        // WebSocket progress tracking
+        function startProgressTracking(jobId) {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const wsUrl = `${protocol}://${window.location.host}/ws/progress/${jobId}`;
+
+            try {
+                state.ws = new WebSocket(wsUrl);
+
+                state.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        updateProgress(data);
+                    } catch (error) {
+                        console.error('WebSocket message error:', error);
+                    }
+                };
+
+                state.ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    // Fallback to polling
+                    pollProgress(jobId);
+                };
+
+                state.ws.onclose = () => {
+                    state.ws = null;
+                };
+
+            } catch (error) {
+                console.error('WebSocket connection failed:', error);
+                // Fallback to polling
+                pollProgress(jobId);
+            }
+        }
+
+        // Polling fallback
+        function pollProgress(jobId) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/progress/${jobId}`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    updateProgress(data);
+
+                    if (data.status === 'finished' || data.status === 'error') {
+                        clearInterval(interval);
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 1000);
+        }
+
+        // Update progress UI
+        function updateProgress(data) {
+            if (data.status === 'downloading') {
+                // Parse percent
+                let percent = 0;
+                if (data.percent) {
+                    const match = data.percent.match(/(\d+(?:\.\d+)?)/);
+                    if (match) {
+                        percent = parseFloat(match[1]);
+                    }
+                }
+
+                elements.downloadProgress.classList.remove('indeterminate');
+                elements.downloadProgress.style.width = `${percent}%`;
+
+                // Build status text
+                let text = `Загрузка: ${percent.toFixed(1)}%`;
+                if (data.speed) text += ` • ${data.speed}`;
+                if (data.eta) text += ` • ETA: ${data.eta}`;
+                if (data.total_bytes) {
+                    text += ` • ${formatBytes(data.downloaded_bytes)} / ${formatBytes(data.total_bytes)}`;
+                }
+
+                elements.downloadText.textContent = text;
+
+            } else if (data.status === 'postprocessing') {
+                elements.downloadProgress.classList.remove('indeterminate');
+                elements.downloadProgress.style.width = '100%';
+                elements.downloadText.textContent = 'Обработка видео...';
+
+            } else if (data.status === 'finished') {
+                elements.downloadProgress.style.width = '100%';
+                elements.downloadText.textContent = 'Готово! Загрузка файла...';
+
+                // Download file
+                Toast.show('Видео готово!', 'success');
+                window.location.href = `/fetch/${state.currentJobId}`;
+
+                // Reset after delay
+                setTimeout(resetUI, 2000);
+
+            } else if (data.status === 'error') {
+                Toast.show(data.error || 'Ошибка загрузки', 'error');
+                resetUI();
+
+            } else if (data.status === 'starting') {
+                elements.downloadProgress.classList.add('indeterminate');
+                elements.downloadText.textContent = 'Подготовка загрузки...';
+            }
+        }
+
+        // Handle paste
+        elements.urlInput.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                if (elements.urlInput.value.trim()) {
+                    elements.probeBtn.focus();
+                }
+            }, 50);
         });
     </script>
 </body>
+
+</html>

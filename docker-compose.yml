@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - downloads:/tmp/video_downloads
+    environment:
+      - TEMP_DIR=/tmp/video_downloads
+    restart: unless-stopped
+
+volumes:
+  downloads:

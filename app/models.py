@@ -1,0 +1,87 @@
+from pydantic import BaseModel, HttpUrl, validator
+from typing import Optional, Literal, Dict, Any, List, Union
+from datetime import datetime
+from urllib.parse import urlparse
+from app.config import settings
+
+
+class DownloadRequest(BaseModel):
+    url: HttpUrl
+    fmt: str
+
+    @validator("url")
+    def validate_url(cls, v):
+        parsed = urlparse(str(v))
+        domain = parsed.netloc.lower()
+
+        # Check if domain is allowed
+        if not any(allowed in domain for allowed in settings.allowed_domains):
+            raise ValueError(f"Unsupported domain: {domain}")
+        return v
+
+    @validator("fmt")
+    def validate_format(cls, v):
+        # Basic format validation
+        if not v or len(v) > 200:
+            raise ValueError("Invalid format specification")
+        # Prevent command injection
+        if any(
+            char in v for char in [";", "&", "|", "`", "$", "(", ")", "<", ">", "\n"]
+        ):
+            raise ValueError("Invalid characters in format")
+        return v
+
+
+class JobStatus(BaseModel):
+    job_id: str
+    status: Literal[
+        "queued",
+        "starting",
+        "downloading",
+        "postprocessing",
+        "finished",
+        "error",
+        "cancelled",
+    ]
+    percent: Optional[str] = None
+    speed: Optional[str] = None
+    eta: Optional[str] = None
+    downloaded_bytes: Optional[int] = None
+    total_bytes: Optional[int] = None
+    filename: Optional[str] = None
+    filepath: Optional[str] = None
+    error: Optional[str] = None
+    created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
+
+
+class VideoFormat(BaseModel):
+    id: str
+    type: Literal["av", "video", "audio", "other"]
+    label: str
+    ext: Optional[str] = None
+    res: Optional[str] = None
+    fps: Optional[Union[int, float]] = None  # Может быть float
+    height: Optional[int] = None
+    tbr: Optional[Union[int, float]] = None  # Может быть float
+    vcodec: Optional[str] = None
+    acodec: Optional[str] = None
+    fmt: str
+
+    # Валидаторы для преобразования float в int где нужно
+    @validator("fps", pre=True)
+    def convert_fps(cls, v):
+        if v is not None and isinstance(v, (int, float)):
+            return int(v)  # Округляем до целого
+        return v
+
+    @validator("tbr", pre=True)
+    def convert_tbr(cls, v):
+        if v is not None and isinstance(v, (int, float)):
+            return round(v)  # Округляем до целого
+        return v
+
+
+class ProbeResponse(BaseModel):
+    meta: Dict[str, Any]
+    formats: List[VideoFormat]
